@@ -1,0 +1,59 @@
+const Url = require('../models/urlModel');
+const asyncHandle = require('../middlewares/asyncHandle');
+const { nanoid } = require('nanoid');
+const validUrl = require('valid-url');
+
+// [POST] /shorten
+const shortenUrl = asyncHandle(async (req, res, next) => {
+    const { longUrl } = req.body;
+    const baseUrl = 'http://localhost:3000';
+
+    // create url code
+    const urlCode = nanoid();
+
+    // check long url
+    if (validUrl.isUri(longUrl)) {
+        let url = await Url.findOne({ longUrl });
+
+        if (url) {
+            res.json(url);
+        } else {
+            const shortUrl = baseUrl + '/' + urlCode;
+
+            url = new Url({
+                longUrl,
+                shortUrl,
+                urlCode,
+                date: new Date(),
+            });
+
+            url.save();
+
+            res.json(url);
+        }
+    } else {
+        res.status(401).json('Invalid long url');
+    }
+});
+
+// [GET] /:code
+const directToLongUrl = asyncHandle(async (req, res, next) => {
+    const url = await Url.findOne({ urlCode: req.params.code });
+    if (url) {
+        return res.redirect(url.longUrl);
+    } else {
+        return res.status(404).json('Not found url');
+    }
+});
+
+// [GET] /
+const showUrls = asyncHandle(async (req, res, next) => {
+    const urls = await Url.find();
+    res.json(urls);
+});
+
+module.exports = {
+    shortenUrl,
+    directToLongUrl,
+    showUrls,
+};
