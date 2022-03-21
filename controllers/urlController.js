@@ -1,6 +1,6 @@
 const Url = require('../models/urlModel');
 const asyncHandle = require('../middlewares/asyncHandle');
-const { nanoid } = require('nanoid');
+const shortid = require('shortid');
 const validUrl = require('valid-url');
 
 // [POST] /shorten
@@ -9,7 +9,7 @@ const shortenUrl = asyncHandle(async (req, res, next) => {
     const baseUrl = 'http://localhost:3000';
 
     // create url code
-    const urlCode = nanoid();
+    const urlCode = shortid.generate();
 
     // check long url
     if (validUrl.isUri(longUrl)) {
